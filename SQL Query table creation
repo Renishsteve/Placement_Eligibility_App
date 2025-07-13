@@ -1,0 +1,50 @@
+#SQL Query table creation:
+
+import sqlite3
+
+conn = sqlite3.connect("students.db")
+cur = conn.cursor()
+
+cur.execute("""
+CREATE TABLE IF NOT EXISTS students (
+    student_id INTEGER PRIMARY KEY,
+    first_name TEXT,
+    last_name TEXT,
+    email TEXT,
+    dob DATE
+)
+""")
+
+cur.execute("""
+CREATE TABLE IF NOT EXISTS enrollments (
+    student_id INTEGER,
+    course TEXT,
+    enrollment_date DATE,
+    PRIMARY KEY (student_id, course),
+    FOREIGN KEY (student_id) REFERENCES students(student_id)
+)
+""")
+
+cur.execute("""
+CREATE TABLE IF NOT EXISTS scores (
+    student_id INTEGER,
+    course TEXT,
+    score INTEGER,
+    PRIMARY KEY (student_id, course),
+    FOREIGN KEY (student_id) REFERENCES students(student_id)
+)
+""")
+
+cur.execute("""
+CREATE TABLE IF NOT EXISTS attendance (
+    student_id INTEGER,
+    date DATE,
+    present BOOLEAN,
+    PRIMARY KEY (student_id, date),
+    FOREIGN KEY (student_id) REFERENCES students(student_id)
+)
+""")
+
+conn.commit()
+conn.close()
+print("✅ Tables created successfully.")
