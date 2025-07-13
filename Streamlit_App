@@ -1,0 +1,23 @@
+
+# app.py
+import streamlit as st
+import sqlite3
+import pandas as pd
+
+@st.cache(allow_output_mutation=True)
+def get_conn():
+    return sqlite3.connect('students.db', check_same_thread=False)
+
+conn = get_conn()
+
+st.title("📚 Student Records Explorer")
+
+table = st.sidebar.selectbox("View Table:", ["students","enrollments","scores","attendance"])
+df = pd.read_sql_query(f"SELECT * FROM {table}", conn)
+st.write(f"Showing `{table}` — {len(df)} rows")
+st.dataframe(df)
+
+if st.sidebar.button("✨ Regenerate Data"):
+    import subprocess
+    subprocess.run(["python", "data_generator.py"])
+    st.success("Regenerated data, please refresh.")
