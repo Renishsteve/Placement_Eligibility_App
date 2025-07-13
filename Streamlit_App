@@ -1,4 +1,3 @@
-
 # app.py
 import streamlit as st
 import sqlite3
@@ -21,3 +20,75 @@ if st.sidebar.button("✨ Regenerate Data"):
     import subprocess
     subprocess.run(["python", "data_generator.py"])
     st.success("Regenerated data, please refresh.")
+
+# DB connection
+conn = sqlite3.connect('students.db')
+
+# Sidebar for SQL Insight Selection
+st.sidebar.title("📌 SQL Insights")
+selected_query = st.sidebar.selectbox("Choose a query to view insights:", [
+    "Top 5 Programming Performers",
+    "Average score of students across the Courses",
+    "Most Popular Courses",
+    "Student Count by Birth Year",
+    "Low Attendance (< 75%)"
+])
+
+# Dynamic SQL based on selection
+if selected_query == "Top 5 Programming Performers":
+    st.subheader("🎓 Top 5 Students by Total Programming Score")
+    query = """
+        SELECT student_id, SUM(score) AS total_score
+        FROM scores
+        GROUP BY student_id
+        ORDER BY total_score DESC
+        LIMIT 5;   
+    """
+
+elif selected_query == "Average score of students across the Courses":
+    st.subheader("🌟 Average score of students across the Courses")
+    query = """
+        SELECT student_id, AVG(score) AS average_score
+        FROM scores
+        GROUP BY student_id 
+ORDER BY average_score DESC;     """
+
+
+elif selected_query == "Most Popular Courses":
+    st.subheader("🔥 Most Popular Courses by Enrollment")
+
+    query = """
+        SELECT 
+            course,
+            COUNT(*) AS total_enrollments
+        FROM enrollments
+        GROUP BY course
+        ORDER BY total_enrollments DESC;
+    """
+
+
+elif selected_query == "Student Count by Birth Year":
+    st.subheader("📆 Student Count Grouped by Year of Birth")
+
+    query = """
+        SELECT 
+            STRFTIME('%Y', dob) AS birth_year,
+            COUNT(*) AS student_count
+        FROM students
+        GROUP BY birth_year
+        ORDER BY birth_year;
+    """
+
+elif selected_query == "Low Attendance (< 75%)":
+    st.subheader("🚫 Students with < 75% Attendance")
+    query = """
+        SELECT a.student_id,
+               ROUND(SUM(CASE WHEN present THEN 1 ELSE 0 END)*100.0/30, 2) AS attendance_pct
+        FROM attendance a
+        GROUP BY a.student_id
+        HAVING attendance_pct < 75;
+    """
+
+# Execute and display the result
+df = pd.read_sql_query(query, conn)
+st.dataframe(df)
